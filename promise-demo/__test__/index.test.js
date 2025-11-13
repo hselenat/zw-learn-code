@@ -71,4 +71,33 @@ describe("_Promise", () => {
       expect(err).toBe("error");
     });
   });
+  test("如果构造函数抛出了一个错误，then的第二个参数也可以捕捉到这个错误", () => {
+    new _Promise(() => {
+      throw new Error("error");
+    }).then(null, (err) => {
+      expect(err).toEqual(new Error("error"));
+    });
+  });
+  test("链式调用", () => {
+    new _Promise((resolve) => {
+      resolve("success");
+    })
+      .then((res) => {
+        expect(res).toBe("success");
+        return "next success";
+      })
+      .then((res) => {
+        expect(res).toBe("next success");
+      });
+    new _Promise((_, reject) => {
+      reject("error");
+    })
+      .then(null, (err) => {
+        expect(err).toBe("error");
+        return "next error";
+      })
+      .then(null, (err) => {
+        expect(err).toBe("next error");
+      });
+  });
 });

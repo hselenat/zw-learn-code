@@ -37,38 +37,58 @@ class _Promise {
         }
       }
     };
-    // 传入的回调会有两个参数resolve和reject
-    executor(resolve, reject);
+    // 使用try catch捕获构造函数中的错误
+    try {
+      // 传入的回调会有两个参数resolve和reject
+      executor(resolve, reject);
+    } catch (error) {
+      // 如果构造函数中抛出了错误，会执行reject
+      reject(error);
+    }
   }
   // then方法
   then(onFulfilled, onRejected) {
-    // 由于executor可能是一个异步函数，所以不能直接执行
-    // 需要做一些状态判断
-    // 如果执行then的时候，Promise实例状态已经发生变化，则直接执行传入的参数
-    if (
-      this.status === STATUS_FULFILLED &&
-      onFulfilled &&
-      typeof onFulfilled === "function"
-    ) {
-      onFulfilled(this.value);
-    }
-    if (
-      this.status === STATUS_REJECTED &&
-      onRejected &&
-      typeof onRejected === "function"
-    ) {
-      onRejected(this.reason);
-    }
-    // 如果执行then的时候状态还是pending，则将回调函数放入队列中，等待执行resolve
-    // 或reject的时候，统一执行所有的队列
-    if (this.status === STATUS_PENDING) {
-      if (onFulfilled && typeof onFulfilled === "function") {
-        this.resolveQueue.push(onFulfilled);
+    // 想要实现链式调用，就需要返回新的promise对象
+    return new _Promise((resolve, reject) => {
+      // 由于executor可能是一个异步函数，所以不能直接执行
+      // 需要做一些状态判断
+      // 如果执行then的时候，Promise实例状态已经发生变化，则直接执行传入的参数
+      if (
+        this.status === STATUS_FULFILLED &&
+        onFulfilled &&
+        typeof onFulfilled === "function"
+      ) {
+        // 将onFulfilled返回的值作为下一个Promise resolve的值
+        const value = onFulfilled(this.value);
+        resolve(value);
       }
-      if (onRejected && typeof onRejected === "function") {
-        this.rejectQueue.push(onRejected);
+      if (
+        this.status === STATUS_REJECTED &&
+        onRejected &&
+        typeof onRejected === "function"
+      ) {
+        // 将onRejected返回的错误原因作为下一个Promise reject的错误原因
+        const reason = onRejected(this.reason);
+        reject(reason);
       }
-    }
+      // 如果执行then的时候状态还是pending，则将回调函数放入队列中，等待执行resolve
+      // 或reject的时候，统一执行所有的队列
+      if (this.status === STATUS_PENDING) {
+        // 这里的队列是在构造函数中处理的，所以需要处理转化一下
+        if (onFulfilled && typeof onFulfilled === "function") {
+          this.resolveQueue.push((params) => {
+            const value = onFulfilled(params);
+            resolve(value);
+          });
+        }
+        if (onRejected && typeof onRejected === "function") {
+          this.rejectQueue.push((params) => {
+            const reason = onRejected(params);
+            reject(reason);
+          });
+        }
+      }
+    });
   }
 }
 module.exports = _Promise;
