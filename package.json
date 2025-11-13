@@ -1,0 +1,26 @@
+{
+  "name": "zw-learn-code",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [
+    "js"
+  ],
+  "homepage": "https://github.com/hselenat/zw-learn-code#readme",
+  "bugs": {
+    "url": "https://github.com/hselenat/zw-learn-code/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hselenat/zw-learn-code.git"
+  },
+  "license": "ISC",
+  "author": "HSelenaT",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "jest": "^30.2.0"
+  }
+}
