@@ -55,4 +55,20 @@ describe("_Promise", () => {
       expect(err).toBe("error");
     });
   });
+  test("executor 可以是一个异步函数", () => {
+    new _Promise((resolve) => {
+      setTimeout(() => {
+        resolve("success");
+      }, 1000);
+    }).then((res) => {
+      expect(res).toBe("success");
+    });
+    new _Promise((_, reject) => {
+      setTimeout(() => {
+        reject("error");
+      }, 1000);
+    }).then(null, (err) => {
+      expect(err).toBe("error");
+    });
+  });
 });
