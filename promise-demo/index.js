@@ -124,5 +124,89 @@ class _Promise {
       }
     );
   }
+  // 新增类方法: resolve方法
+  static resolve(value) {
+    return new _Promise((resolve) => resolve(value));
+  }
+  // 新增类方法: reject方法
+  static reject(reason) {
+    return new _Promise((_, reject) => reject(reason));
+  }
+  // 新增类方法: all方法
+  static all(promiseQueue) {
+    return new _Promise((resolve, reject) => {
+      const result = [];
+      // 对队列进行遍历
+      promiseQueue.forEach((promise) => {
+        promise
+          .then((res) => {
+            result.push(res); // 将结果放入result中
+          })
+          .catch((err) => {
+            // 任何一个promise rejected，那么就直接执行reject
+            reject(err);
+          });
+      });
+      // 所有都resolve后，才会resolve
+      resolve(result);
+    });
+  }
+  // 新增类方法: allSettled方法
+  static allSettled(promiseQueue) {
+    return new _Promise((resolve) => {
+      const result = [];
+      // 对队列进行遍历
+      promiseQueue.forEach((promise) => {
+        promise
+          .then((res) => {
+            result.push({status: STATUS_FULFILLED, value: res}); // 将结果放入result中
+          })
+          .catch((err) => {
+            result.push({status: STATUS_REJECTED, reason: err}); // 将错误放入result中
+          });
+      });
+      // 所有都resolve后，才会resolve
+      resolve(result);
+    });
+  }
+  // 新增类方法: race方法
+  static race(promiseQueue) {
+    return new _Promise((resolve, reject) => {
+      // 对队列进行遍历
+      promiseQueue.forEach((promise) => {
+        promise
+          .then((res) => {
+            // 只要有一个promise resolve，那么就直接执行resolve
+            resolve(res);
+          })
+          .catch((err) => {
+            // 只要有一个promise reject，那么就直接执行reject
+            reject(err);
+          });
+      });
+    });
+  }
+  // 新增类方法: any方法
+  static any(promiseQueue) {
+    return new _Promise((resolve, reject) => {
+      const errors = [];
+      // 对队列进行遍历
+      promiseQueue.forEach((promise) => {
+        promise
+          .then((res) => {
+            // 只要有一个promise resolve，那么就直接执行resolve
+            resolve(res);
+          })
+          .catch((err) => {
+            // 只要有一个promise reject，那么就将错误放入errors数组中
+            errors.push(err);
+          });
+      });
+      // 如果所有promise都rejected，那么就直接执行reject
+      if (errors.length === promiseQueue.length) {
+        reject(new AggregateError(errors, "All promises were rejected"));
+      }
+    });
+  }
 }
 module.exports = _Promise;

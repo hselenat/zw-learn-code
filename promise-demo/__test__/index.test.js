@@ -154,4 +154,89 @@ describe("_Promise", () => {
     });
     expect(finallyTimer).toBe(2);
   });
+  // Promise.resolve("success")
+  // 等于
+  // new Promise(resolve => resolve("success"))
+  test("resolve 可以将一个传入的值作为resolve的参数", () => {
+    const data = {name: "pikachu"};
+    _Promise.resolve(data).then((res) => {
+      expect(res).toBe(data);
+    });
+  });
+  test("reject 可以传入一个reason，作为reject的参数", () => {
+    const data = {name: "pikachu"};
+    _Promise.reject(data).then(null, (err) => {
+      expect(err).toBe(data);
+    });
+  });
+  test("all方法接受队列，所有fulfilled才会fulfilled，只要有一个rejected则rejected", () => {
+    function genPromise(index) {
+      return new _Promise((resolve) => {
+        resolve("success" + index);
+      });
+    }
+    const promiseQueue = [genPromise(1), genPromise(2), genPromise(3)];
+    _Promise.all(promiseQueue).then((res) => {
+      expect(res).toEqual(["success1", "success2", "success3"]);
+    });
+    const promiseQueue2 = [
+      genPromise(1),
+      genPromise(2),
+      genPromise(3),
+      new _Promise((_, reject) => reject("error")),
+    ];
+    _Promise.all(promiseQueue2).then(null, (err) => {
+      expect(err).toBe("error");
+    });
+  });
+  test("allSettled 无论promise队列是成功还是失败，都会保存起来，并且只会是fulfilled", () => {
+    function genPromise(index) {
+      return new _Promise((resolve, reject) => {
+        if (index % 2 === 0) {
+          resolve("success" + index);
+        } else {
+          reject("error" + index);
+        }
+      });
+    }
+    const promiseQueue = [genPromise(1), genPromise(2), genPromise(3)];
+    _Promise.allSettled(promiseQueue).then((res) => {
+      expect(res).toEqual([
+        {status: STATUS_FULFILLED, value: "success1"},
+        {status: STATUS_REJECTED, reason: "error2"},
+        {status: STATUS_FULFILLED, value: "success3"},
+      ]);
+    });
+  });
+
+  test("race队列中哪个最先完成，那么race返回的实例就是什么状态", () => {
+    function genPromise(index) {
+      return new _Promise((resolve, reject) => {
+        if (index % 2 === 0) {
+          resolve("success" + index);
+        } else {
+          reject("error" + index);
+        }
+      });
+    }
+    const promiseQueue = [genPromise(1), genPromise(2), genPromise(3)];
+    _Promise.race(promiseQueue).then((res) => {
+      expect(res).toBe("success1");
+    });
+  });
+  test("any方法，只要有一个成功，那么any返回的实例就是fulfilled，并且是第一个成功的值", () => {
+    function genPromise(index) {
+      return new _Promise((resolve, reject) => {
+        if (index % 2 === 0) {
+          resolve("success" + index);
+        } else {
+          reject("error" + index);
+        }
+      });
+    }
+    const promiseQueue = [genPromise(1), genPromise(2), genPromise(3)];
+    _Promise.any(promiseQueue).then((res) => {
+      expect(res).toBe("success1");
+    });
+  });
 });
