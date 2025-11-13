@@ -18,4 +18,41 @@ describe("_Promise", () => {
     const p3 = new _Promise((_, reject) => reject());
     expect(p3.status).toBe("rejected");
   });
+  test("执行 resolve、reject后状态固化", () => {
+    const p1 = new _Promise((resolve, reject) => {
+      resolve();
+      reject();
+    });
+    // console.debug(p1.status); // 可以通过debug调试
+    expect(p1.status).toBe("fulfilled");
+    const p2 = new _Promise((resolve, reject) => {
+      reject();
+      resolve();
+    });
+    expect(p2.status).toBe("rejected");
+  });
+  test("then方法可以接受两个参数，可以处理resolve和reject", () => {
+    new _Promise((resolve) => {
+      resolve("success");
+    }).then((res) => {
+      expect(res).toBe("success");
+    });
+    new _Promise((resolve, reject) => {
+      reject("error");
+    }).then(null, (err) => {
+      expect(err).toBe("error");
+    });
+  });
+  test("then方法可以接受两个参数，但是不是函数", () => {
+    new _Promise((resolve) => {
+      resolve("success");
+    }).then((res) => {
+      expect(res).toBe("success");
+    });
+    new _Promise((resolve, reject) => {
+      reject("error");
+    }).then(null, (err) => {
+      expect(err).toBe("error");
+    });
+  });
 });
