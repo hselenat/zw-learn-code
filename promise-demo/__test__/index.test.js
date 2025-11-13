@@ -71,13 +71,6 @@ describe("_Promise", () => {
       expect(err).toBe("error");
     });
   });
-  test("如果构造函数抛出了一个错误，then的第二个参数也可以捕捉到这个错误", () => {
-    new _Promise(() => {
-      throw new Error("error");
-    }).then(null, (err) => {
-      expect(err).toEqual(new Error("error"));
-    });
-  });
   test("链式调用", () => {
     new _Promise((resolve) => {
       resolve("success");
@@ -98,6 +91,52 @@ describe("_Promise", () => {
       })
       .then(null, (err) => {
         expect(err).toBe("next error");
+      });
+  });
+  test("如果构造函数抛出了一个错误，then的第二个参数也可以捕捉到这个错误", () => {
+    new _Promise(() => {
+      throw new Error("error");
+    }).then(null, (err) => {
+      expect(err).toEqual(new Error("error"));
+    });
+  });
+  test("在链式调用的过程中出现任何错误，将由下面的then第二个参数处理", () => {
+    new _Promise((resolve) => {
+      resolve("success");
+    })
+      .then((res) => {
+        expect(res).toBe("success");
+        throw new Error("error");
+      })
+      .then(null, (err) => {
+        expect(err).toEqual(new Error("error"));
+      });
+  });
+  test("catch应该捕获上一个promise实例的reject", () => {
+    new _Promise((_, reject) => {
+      reject("error");
+    }).catch((err) => {
+      expect(err).toBe("error");
+    });
+    new _Promise((resolve, reject) => {
+      resolve("success");
+    })
+      .then(null, (res) => {
+        throw new Error("error");
+      })
+      .catch((err) => {
+        expect(err).toEqual(new Error("error"));
+      });
+  });
+  test("catch可以捕获最开始的reject，也就是构造函数抛出的错误", () => {
+    new _Promise((resolve, reject) => {
+      reject("error");
+    })
+      .then((res) => {
+        return res;
+      })
+      .catch((err) => {
+        expect(err).toBe("error");
       });
   });
 });
