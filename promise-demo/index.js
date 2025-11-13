@@ -110,18 +110,18 @@ class _Promise {
     // 直接复用then方法逻辑即可，将传入的参数作为then的第二个参数
     // 当你调用promise.catch(onRejected)时，实际上就是调用promise.then(null, onRejected)，只是不传入成功回调，只传入失败回调
     // 如果promise被拒绝（rejected），则会调用传入的onRejected函数，如果promise成功，则直接返回成功的值不做处理
-    this.then(null, onRejected);
+    return this.then(null, onRejected);
   }
   // 新增实例方法：finally方法
   finally(onFinally) {
     // 直接复用then方法逻辑即可，传入onFinally
-    this.then(
-      () => {
-        onFinally();
-      },
-      () => {
-        onFinally();
-      }
+    //  传递Promise 的值和状态
+    return this.then(
+      (value) => _Promise.resolve(onFinally()).then(() => value),
+      (reason) =>
+        _Promise.resolve(onFinally()).then(() => {
+          throw reason;
+        })
     );
   }
   // 新增类方法: resolve方法
@@ -136,19 +136,23 @@ class _Promise {
   static all(promiseQueue) {
     return new _Promise((resolve, reject) => {
       const result = [];
+      let count = 0; // all 方法需要保持顺序和计数
       // 对队列进行遍历
-      promiseQueue.forEach((promise) => {
+      promiseQueue.forEach((promise, index) => {
         promise
           .then((res) => {
-            result.push(res); // 将结果放入result中
+            result[index] = res; // 将结果放入result中
+            count++;
+            // 如果所有promise都resolve了，那么就直接执行resolve
+            if (count === promiseQueue.length) {
+              resolve(result);
+            }
           })
           .catch((err) => {
             // 任何一个promise rejected，那么就直接执行reject
             reject(err);
           });
       });
-      // 所有都resolve后，才会resolve
-      resolve(result);
     });
   }
   // 新增类方法: allSettled方法
