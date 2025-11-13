@@ -139,4 +139,19 @@ describe("_Promise", () => {
         expect(err).toBe("error");
       });
   });
+  test("无论promise状态是成功还是失败，finally回调函数都会被执行", () => {
+    let finallyTimer = 0;
+    new _Promise((resolve) => {
+      resolve("success");
+    }).finally(() => {
+      finallyTimer++;
+    });
+    expect(finallyTimer).toBe(1);
+    new _Promise((_, reject) => {
+      reject("error");
+    }).finally(() => {
+      finallyTimer++;
+    });
+    expect(finallyTimer).toBe(2);
+  });
 });

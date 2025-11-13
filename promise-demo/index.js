@@ -112,5 +112,17 @@ class _Promise {
     // 如果promise被拒绝（rejected），则会调用传入的onRejected函数，如果promise成功，则直接返回成功的值不做处理
     this.then(null, onRejected);
   }
+  // 新增实例方法：finally方法
+  finally(onFinally) {
+    // 直接复用then方法逻辑即可，传入onFinally
+    this.then(
+      () => {
+        onFinally();
+      },
+      () => {
+        onFinally();
+      }
+    );
+  }
 }
 module.exports = _Promise;
